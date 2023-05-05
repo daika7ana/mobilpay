@@ -6,38 +6,6 @@ use Omnipay\MobilPay\Api\Address;
 
 trait DataTrait
 {
-    protected function initData()
-    {
-        $this->data = [
-            'orderId'    => '',
-            'amount'     => '',
-            'currency'   => config('mobilpay.currency'),
-            'details'    => '',
-            'confirmUrl' => config('mobilpay.confirm_url'),
-            'returnUrl'  => config('mobilpay.return_url'),
-            'cancelUrl'  => config('mobilpay.cancel_url'),
-            'testMode'   => config('mobilpay.testMode'),
-            'params'     => []
-        ];
-
-        //ensure absolute urls
-        foreach (['confirmUrl', 'returnUrl', 'cancelUrl'] as $var) {
-            if ($this->isRelativeUrl($this->data[$var])) {
-                $this->data[$var] = url($this->data[$var]);
-            }
-        }
-    }
-
-    /**
-     * @param string $url
-     * @return bool
-     */
-    protected function isRelativeUrl($url)
-    {
-        $url = parse_url($url);
-        return empty($url['host']);
-    }
-
     /**
      * @param $value string
      * @return $this
@@ -157,6 +125,39 @@ trait DataTrait
         $this->data['shippingAddress'] = $this->ensureAddressDefaults($value);
 
         return $this;
+    }
+
+    protected function initData(): void
+    {
+        $this->data = [
+            'orderId' => '',
+            'amount' => '',
+            'currency' => config('mobilpay.currency'),
+            'details' => '',
+            'confirmUrl' => config('mobilpay.confirm_url'),
+            'returnUrl' => config('mobilpay.return_url'),
+            'cancelUrl' => config('mobilpay.cancel_url'),
+            'testMode' => config('mobilpay.testMode'),
+            'params' => []
+        ];
+
+        // ensure absolute urls
+        foreach (['confirmUrl', 'returnUrl', 'cancelUrl'] as $var) {
+            if ($this->isRelativeUrl($this->data[$var])) {
+                $this->data[$var] = url($this->data[$var]);
+            }
+        }
+    }
+
+    /**
+     * @param string $url
+     * @return bool
+     */
+    protected function isRelativeUrl($url)
+    {
+        $url = parse_url($url);
+
+        return empty($url['host']);
     }
 
     /**

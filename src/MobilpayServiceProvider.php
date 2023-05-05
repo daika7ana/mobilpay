@@ -11,17 +11,18 @@ class MobilpayServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/config/mobilpay.php', 'mobilpay'
+            __DIR__ . '/config/mobilpay.php',
+            'mobilpay'
         );
 
         $this->publishes([
             __DIR__ . '/config' => config_path('/'),
         ]);
 
-        $this->app->singleton('mobilpay',function ($app){
+        $this->app->singleton('mobilpay', function ($app) {
             return new MobilpayGateway();
         });
     }

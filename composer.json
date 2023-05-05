@@ -10,14 +10,13 @@
         }
     ],
     "require": {
-        "php": ">=7.1",
-        "illuminate/support": "5.* || 6.* || 7.* || 8.* || 9.* || 10.*",
+        "php": ">= 7.4",
+        "illuminate/support": ">= 5",
         "omnipay/common": "~3.0",
-        "daika7ana/omnipay-mobilpay": "^1.2.1"
+        "daika7ana/omnipay-mobilpay": "dev-master"
     },
     "autoload": {
         "psr-4": {
-            "App\\": "app/",
             "Adrianbarbos\\Mobilpay\\": "src/"
         }
     },
@@ -32,5 +31,10 @@
             }
         }
     },
-    "minimum-stability": "stable"
+    "minimum-stability": "dev",
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": false
+        }
+    }
 }

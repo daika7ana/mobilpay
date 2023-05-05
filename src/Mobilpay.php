@@ -3,8 +3,7 @@
 namespace Adrianbarbos\Mobilpay;
 
 /**
- * Class Mobilpay
- * @package Adrianbarbos\Mobilpay
+ * Class Mobilpay.
  * @method static \Omnipay\Common\Message\ResponseInterface purchase(bool $autoRedirect = true)
  * @method static \Omnipay\Common\Message\ResponseInterface response()
  * @method static MobilpayGateway setOrderId($orderId)
@@ -20,7 +19,7 @@ namespace Adrianbarbos\Mobilpay;
 class Mobilpay extends \Illuminate\Support\Facades\Facade
 {
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     protected static function getFacadeAccessor()
     {

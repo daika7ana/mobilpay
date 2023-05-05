@@ -6,9 +6,9 @@ use Omnipay\Omnipay;
 
 class MobilpayGateway
 {
-    protected $data;
-
     use DataTrait;
+
+    protected $data;
 
     public function __construct()
     {
