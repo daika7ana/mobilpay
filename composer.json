@@ -12,8 +12,8 @@
     "require": {
         "php": ">= 7.4",
         "illuminate/support": ">= 5",
-        "omnipay/common": "~3.0",
-        "daika7ana/omnipay-mobilpay": "dev-master"
+        "omnipay/common": "^3.0",
+        "daika7ana/omnipay-mobilpay": "^1.0"
     },
     "autoload": {
         "psr-4": {

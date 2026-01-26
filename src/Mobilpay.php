@@ -5,7 +5,7 @@ namespace Adrianbarbos\Mobilpay;
 /**
  * Class Mobilpay.
  * @method static \Omnipay\Common\Message\ResponseInterface purchase(bool $autoRedirect = true)
- * @method static \Omnipay\Common\Message\ResponseInterface response()
+ * @method static \Omnipay\Common\Message\ResponseInterface response(bool $autoSendResponse = true)
  * @method static MobilpayGateway setOrderId($orderId)
  * @method static MobilpayGateway setAmount($amount)
  * @method static MobilpayGateway setCurrency($currency)
