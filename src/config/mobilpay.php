@@ -16,6 +16,6 @@ return [
 
     'cancel_url' => '',
 
-    'return_url' => ''
+    'return_url' => '',
 
 ];

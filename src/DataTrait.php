@@ -138,12 +138,12 @@ trait DataTrait
             'returnUrl' => config('mobilpay.return_url'),
             'cancelUrl' => config('mobilpay.cancel_url'),
             'testMode' => config('mobilpay.testMode'),
-            'params' => []
+            'params' => [],
         ];
 
-        // ensure absolute urls
+        // ensure absolute urls; url('') would resolve to the app root
         foreach (['confirmUrl', 'returnUrl', 'cancelUrl'] as $var) {
-            if ($this->isRelativeUrl($this->data[$var])) {
+            if (!empty($this->data[$var]) && $this->isRelativeUrl($this->data[$var])) {
                 $this->data[$var] = url($this->data[$var]);
             }
         }
@@ -168,7 +168,7 @@ trait DataTrait
     {
         $fields = [
             'type', 'firstName', 'lastName', 'fiscalNumber', 'identityNumber', 'country', 'county',
-            'city', 'zipCode', 'address', 'email', 'mobilePhone', 'bank', 'iban'
+            'city', 'zipCode', 'address', 'email', 'mobilePhone', 'bank', 'iban',
         ];
 
         foreach ($fields as $field) {

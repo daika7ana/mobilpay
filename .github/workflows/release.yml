@@ -1,0 +1,39 @@
+name: Release
+
+# Packagist picks up new tags through its own GitHub webhook, so no packaging
+# step (and no credentials) is needed here.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: openssl, mbstring
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer update --prefer-dist --no-interaction --no-progress
+
+      - name: Run tests
+        run: composer test
+
+  release:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: softprops/action-gh-release@v3
+        with:
+          generate_release_notes: true
+          draft: false

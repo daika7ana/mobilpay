@@ -1,222 +1,148 @@
 # Mobilpay
 
-Laravel 5 mobilpay wrapper around omnipay with omnipay-mobilpay driver Edit
-Add topics
+Laravel wrapper around the [Omnipay](https://github.com/thephpleague/omnipay) MobilPay driver
+(`daika7ana/omnipay-mobilpay`): config-driven purchase and IPN handling behind the `Mobilpay` facade.
 
-## Table of Contents
+[![CI](https://github.com/daika7ana/mobilpay/actions/workflows/ci.yml/badge.svg)](https://github.com/daika7ana/mobilpay/actions/workflows/ci.yml)
+[![Latest version](https://img.shields.io/packagist/v/daika7ana/mobilpay.svg)](https://packagist.org/packages/daika7ana/mobilpay)
+[![Downloads](https://img.shields.io/packagist/dt/daika7ana/mobilpay.svg)](https://packagist.org/packages/daika7ana/mobilpay)
+[![PHP](https://img.shields.io/packagist/php-v/daika7ana/mobilpay.svg)](https://packagist.org/packages/daika7ana/mobilpay)
+[![License](https://img.shields.io/packagist/l/daika7ana/mobilpay.svg)](LICENSE)
 
-- <a href="#installation">Installation</a>
-    - <a href="#composer">Composer</a>
-    - <a href="#laravel">Laravel</a>
-- <a href="#basic-usage">Basic Usage</a>
-    - <a href="#initiating-payment-request">Initiating Payment Request</a>
-    - <a href="#handle-reponse">Handle Reponse</a>
-- <a href="#options">Options</a>
-	- <a href="#order-id">Order Id</a>
-	- <a href="#amount">Amount</a>
-	- <a href="#currency">Currency</a>
-	- <a href="#details">Details</a>
-	- <a href="#confirm-url">Confirm Url</a>
-	- <a href="#return-url">Return Url</a>
-	- <a href="#test-mode">Test Mode</a>
-	- <a href="#additional-params"> Additional Params </a>
+## Install
 
-## Installation
-
-### Composer
-
-Require the package via composer
 ```bash
-composer require adrianbarbos/mobilpay
+composer require daika7ana/mobilpay:^1.3
 ```
 
-Or add the package to your `composer.json` file.
+## Requirements
 
-```json
-{
-    "require": {
-        "adrianbarbos/mobilpay": "^1.0"
-    }
-}
-```
+PHP 8.2 or newer, Laravel (or `illuminate/support`) 10, 11, 12 or 13, and `daika7ana/omnipay-mobilpay`,
+which is pulled in as a dependency.
 
-And run `composer update` to get the latest version of the package.
+## Configuration
 
-### Laravel
+The service provider and the `Mobilpay` facade are discovered automatically. Publish the config:
 
-Mobilpay comes with a service provider for Laravel. You'll need to add it to your `composer.json` as mentioned in the above steps, then register the service provider with your application.
-
-**From Laravel 5.5, the service provider and facades will automatically get registered.**
-
-Open `config/app.php` and find the `providers` key. Add `MobilpayServiceProvider` to the array.
-
-```php
-...
-Adrianbarbos\Mobilpay\MobilpayServiceProvider::class,
-...
-```
-
-Add the required aliases to the list of class aliases in the same file.
-
-```php
-...
-'Omnipay' => Omnipay\Omnipay::class,
-'Mobilpay'	=> Adrianbarbos\Mobilpay\Mobilpay::class,
-...
-```
-
-Publish config.
-
-```
+```bash
 php artisan vendor:publish --provider="Adrianbarbos\Mobilpay\MobilpayServiceProvider"
 ```
 
+`config/mobilpay.php` holds the gateway credentials and the purchase defaults:
 
-## Basic Usage
+| Key | Default | Used for |
+| --- | --- | --- |
+| `merchant_id` | `''` | merchant signature sent with every purchase |
+| `public_key_path` | `''` | Netopia certificate, required by `purchase()` |
+| `private_key_path` | `''` | your private key, required by `response()` |
+| `testMode` | `true` | sandbox endpoint when true |
+| `currency` | `'RON'` | default `currency` |
+| `confirm_url` | `''` | IPN endpoint |
+| `return_url` | `''` | browser return endpoint |
+| `cancel_url` | `''` | accepted and normalised, never sent — see the notes |
 
-### Initiating Payment Request
+Relative URLs such as `/mobilpay/ipn` are resolved with `url()`, so they become absolute before they
+reach the provider. Empty values stay empty.
 
+## Usage
 
-```php
-// controller function
+### Start a payment
 
-Mobilpay::setOrderId(1)
-        ->setAmount('10.00')
-        ->setDetails('Some details')
-        ->purchase();
-```
-
-### Handle Reponse
-
-
-```php
-// controller function
-
-$response = Mobilpay::response();
-
-$data = $response->getData(); //array
-
-switch($response->getMessage())
-{
-    case 'confirmed_pending': // transaction is pending review. After this is done, a new IPN request will be sent with either confirmation or cancellation
-
-        //update DB, SET status = "pending"
-
-        break;
-    case 'paid_pending': // transaction is pending review. After this is done, a new IPN request will be sent with either confirmation or cancellation
-
-        //update DB, SET status = "pending"
-
-        break;
-    case 'paid': // transaction is pending authorization. After this is done, a new IPN request will be sent with either confirmation or cancellation
-
-        //update DB, SET status = "open/preauthorized"
-
-        break;
-    case 'confirmed': // transaction is finalized, the money have been captured from the customer's account
-
-        //update DB, SET status = "confirmed/captured"
-
-        break;
-    case 'canceled': // transaction is canceled
-
-        //update DB, SET status = "canceled"
-
-        break;
-    case 'credit': // transaction has been refunded
-
-        //update DB, SET status = "refunded"
-
-        break;
-}	                
-```
-
-# Options
-
-### Order id
+Chain the setters on the facade, then call `purchase()`:
 
 ```php
-/**
- * @param $value string
- * @return $this
- */
+use Adrianbarbos\Mobilpay\Mobilpay;
 
-public function setOrderId($value)
+$response = Mobilpay::setOrderId('ORDER-1')
+    ->setAmount('10.00')
+    ->setCurrency('RON')
+    ->setDetails('Test payment')
+    ->setConfirmUrl('https://example.com/mobilpay/ipn')
+    ->setReturnUrl('https://example.com/mobilpay/return')
+    ->setAdditionalParams(['customer_id' => 42])
+    ->purchase();
+
+return view('payments.redirect', [
+    'url'    => $response->getRedirectUrl(),
+    'fields' => $response->getRedirectData(),
+]);
 ```
 
-### Amount
+`purchase()` returns the Omnipay `PurchaseResponse` and does not redirect. `purchase(autoRedirect: true)`
+additionally calls `$response->redirect()`, which sends the provider's auto-submitting form with
+`header()` and `echo` — the classic shortcut, not what you want from an Inertia or API handler.
+
+Each call starts from a fresh copy of the config defaults: the data set by the setters is discarded
+after `purchase()`, so set order id, amount and the rest again for the next payment. The reset runs in a
+`finally` block, so it also holds in long-lived workers where the facade keeps one gateway instance.
+
+Available setters: `setOrderId()`, `setAmount()`, `setCurrency()`, `setDetails()`, `setConfirmUrl()`,
+`setReturnUrl()`, `setCancelUrl()`, `setTestMode()`, `setAdditionalParams()`, `setBillingAddress()`,
+`setShippingAddress()`.
+
+### Addresses
+
+`setBillingAddress()` and `setShippingAddress()` take the same associative array
+(`type` plus `firstName`, `lastName`, `fiscalNumber`, `identityNumber`, `country`, `county`, `city`,
+`zipCode`, `address`, `email`, `mobilePhone`, `bank`, `iban`). Missing keys are filled with empty
+strings and an unrecognised `type` falls back to `person`.
+
+Only the billing address reaches the provider: the driver maps `billingAddress` into the order and
+ignores `shippingAddress`.
+
+### Handle the IPN
+
+The `confirm_url` route receives `env_key`, `data`, `cipher` and `iv` and must answer with the `<crc>`
+XML acknowledgement. By default `response()` echoes it for you, keeping older controllers working:
 
 ```php
-/**
- * @param $value string
- * @return $this
- */
+use Adrianbarbos\Mobilpay\Mobilpay;
 
-public function setAmount($value)
+$response = Mobilpay::response();  // reads $_POST and echoes the acknowledgement
+$data = $response->getData();      // decrypted payload, notification under ['objPmNotify']
+$action = $response->getMessage(); // the action the provider reports
+
+// confirmed_pending, paid_pending, paid  -> pending; a further IPN follows
+// confirmed                              -> money captured
+// canceled                               -> cancelled
+// credit                                 -> refunded
+
+// the acknowledgement is already echoed; no return value needed
 ```
 
-### Currency
+To answer with the acknowledgement yourself, turn the echo off:
 
 ```php
-/**
- * @param $value string
- * @return $this
- */
+$response = Mobilpay::response(autoSendResponse: false, payload: $request->all());
 
-public function setCurrency($value)
+// ... update the order from $response->getData() and $response->getMessage() ...
+
+return response($response->getCrcResponse(), 200, ['Content-Type' => 'application/xml']);
 ```
 
-### Details
+- `payload` passes the parsed request data instead of reading `$_POST`, which is what runtimes such as
+  Octane need.
+- `getCrcResponse()` returns the XML body and requires `daika7ana/omnipay-mobilpay` ^1.6;
+  `sendResponse()`, which `response()` calls by default, is deprecated upstream because it writes
+  headers and echoes directly.
+- `getData()` returns the decrypted payload as an array, with the notification under
+  `['objPmNotify']`. `isSuccessful()` is true only for `confirmed`; `isPending()` covers
+  `confirmed_pending`, `paid_pending` and `paid`.
 
-```php
-/**
- * @param $value string
- * @return $this
- */
+## Notes
 
-public function setDetails($value)
+- `cancel_url` / `setCancelUrl()` are accepted and turned into absolute URLs, but the underlying card
+  request emits only the confirm and return URLs, so the value never leaves your application.
+- `testMode` switches the endpoint: `true` posts to `https://sandboxsecure.mobilpay.ro`, `false` to
+  `https://secure.mobilpay.ro`.
+- The certificate (`public_key_path`) is needed to build a purchase; the private key
+  (`private_key_path`) is needed to decrypt an IPN.
+
+## Development
+
+```bash
+composer test
 ```
 
-### Confirm Url
-
-```php
-/**
- * @param $value string
- * @return $this
- */
-
-public function setConfirmUrl($value)
-```
-
-### Return Url
-
-```php
-/**
- * @param $value string
- * @return $this
- */
-
-public function setReturnUrl($value)
-```
-
-### Test Mode
-
-```php
-/**
- * @param $value boolean
- * @return $this
- */
-
-public function setTestMode($value)
-```
-
-### Additional Params
-
-```php
-/**
- * @param $value array
- * @return $this
- */
-
-public function setAdditionalParams($value)
-```
+PHPUnit 11 only. The tests stub the config helpers and generate a throwaway key and certificate in the
+system temp directory, so they run without a Laravel application, credentials or network access.

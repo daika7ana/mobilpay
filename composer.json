@@ -1,6 +1,6 @@
 {
     "name": "daika7ana/mobilpay",
-    "description": "Laravel 5 mobilpay wrapper around omnipay with omnipay-mobilpay driver",
+    "description": "MobilPay (Netopia) payments for Laravel through the omnipay-mobilpay driver",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -10,15 +10,26 @@
         }
     ],
     "require": {
-        "php": ">= 7.4",
-        "illuminate/support": ">= 5",
+        "php": "^8.2",
+        "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
         "omnipay/common": "^3.0",
-        "daika7ana/omnipay-mobilpay": "^1.0"
+        "daika7ana/omnipay-mobilpay": "^1.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5|^12.0|^13.0"
     },
     "autoload": {
         "psr-4": {
             "Adrianbarbos\\Mobilpay\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Adrianbarbos\\Mobilpay\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
     },
     "extra": {
         "laravel": {
@@ -31,7 +42,6 @@
             }
         }
     },
-    "minimum-stability": "dev",
     "config": {
         "allow-plugins": {
             "php-http/discovery": false

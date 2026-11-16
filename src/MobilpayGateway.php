@@ -15,27 +15,36 @@ class MobilpayGateway
         $this->initData();
     }
 
-    public function purchase($autoRedirect = true)
+    public function purchase(bool $autoRedirect = false)
     {
-        $gateway = Omnipay::create('MobilPay');
-        $gateway->setMerchantId(config('mobilpay.merchant_id'));
-        $gateway->setPublicKey(config('mobilpay.public_key_path'));
+        try {
+            $gateway = Omnipay::create('MobilPay');
+            $gateway->setMerchantId(config('mobilpay.merchant_id'));
+            $gateway->setPublicKey(config('mobilpay.public_key_path'));
 
-        $response = $gateway->purchase($this->data)->send();
+            $response = $gateway->purchase($this->data)->send();
 
-        if ($autoRedirect) {
-            $response->redirect();
+            if ($autoRedirect) {
+                $response->redirect();
+            }
+
+            return $response;
+        } finally {
+            // scoped per request, but the facade caches one instance on the app; drop this request's data
+            $this->initData();
         }
-
-        return $response;
     }
 
-    public function response($autoSendResponse = true)
+    /**
+     * @return \Omnipay\MobilPay\Message\CompletePurchaseResponse
+     */
+    public function response(bool $autoSendResponse = true, ?array $payload = null)
     {
         $gateway = Omnipay::create('MobilPay');
         $gateway->setPrivateKey(config('mobilpay.private_key_path'));
 
-        $response = $gateway->completePurchase($_POST)->send();
+        /** @var \Omnipay\MobilPay\Message\CompletePurchaseResponse $response */
+        $response = $gateway->completePurchase($payload ?? $_POST)->send();
 
         if ($autoSendResponse) {
             $response->sendResponse();
